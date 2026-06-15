@@ -629,10 +629,16 @@ function renderSalesByCo(){
 // ===== ALL OUTFLOWS TAB =====
 var aoSortField = 'amt', aoSortAsc = false;
 
+function aoData(){
+  if (ALL_OUT && !Array.isArray(ALL_OUT) && ALL_OUT.rows) return ALL_OUT;
+  var _r = Array.isArray(ALL_OUT) ? ALL_OUT : (ALL_OUT && ALL_OUT.rows ? ALL_OUT.rows : []);
+  return { companies:[...new Set(_r.map(x=>x.co))], banks:[...new Set(_r.map(x=>x.bank).filter(Boolean))], rows:_r };
+}
 function initAllOut() {
-  var cos = ALL_OUT.companies;
-  var banks = ALL_OUT.banks;
-  var dates = [...new Set(ALL_OUT.rows.map(r=>r.d))].sort();
+  var AO = aoData();
+  var cos = AO.companies;
+  var banks = AO.banks;
+  var dates = [...new Set(AO.rows.map(r=>r.d))].sort();
 
   var sel_co = document.getElementById('ao-co');
   cos.forEach(c => { var o=document.createElement('option'); o.value=c; o.textContent=c; sel_co.appendChild(o); });
@@ -675,7 +681,8 @@ function renderAllOut() {
   var to_f   = document.getElementById('ao-to').value;
   var srch   = (document.getElementById('ao-search').value||'').trim();
 
-  var rows = ALL_OUT.rows.filter(function(r) {
+  var AO = aoData();
+  var rows = AO.rows.filter(function(r) {
     if(co_f   && r.co   !== co_f)   return false;
     if(bank_f && r.bank !== bank_f) return false;
     if(type_f && r.type !== type_f) return false;
@@ -692,7 +699,7 @@ function renderAllOut() {
   });
 
   var total = rows.reduce(function(s,r){return s+r.amt;},0);
-  document.getElementById('ao-count').textContent = 'نمایش ' + rows.length + ' از ' + ALL_OUT.rows.length + ' ردیف';
+  document.getElementById('ao-count').textContent = 'نمایش ' + rows.length + ' از ' + AO.rows.length + ' ردیف';
   document.getElementById('ao-total').textContent = 'جمع: ' + NA(total) + ' م.ت';
 
   var COC2 = {'پارس آناهید':'var(--ac)','گسترش تمدن':'var(--gr)','توسعه الماس':'var(--yw)','سیمرغ':'var(--pu)','رهجو':'#64748b'};
@@ -1032,5 +1039,5 @@ function toggleTheme(){
 
 render();renderCal();renderIssues();initCFDateSelectors();renderCF();
 </script>
-<div style='position:fixed;bottom:10px;left:10px;z-index:99999;background:white;color:#111;padding:6px 10px;border:1px solid #ddd;border-radius:8px;font-family:tahoma;font-size:12px'>آخرین بروزرسانی: 2026-06-15 15:37:53</div></body>
+<div style='position:fixed;bottom:10px;left:10px;z-index:99999;background:white;color:#111;padding:6px 10px;border:1px solid #ddd;border-radius:8px;font-family:tahoma;font-size:12px'>آخرین بروزرسانی: 2026-06-15 17:13:30</div></body>
 </html>
