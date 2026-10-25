@@ -209,7 +209,7 @@ body.light-mode .theme-btn{border-color:rgba(255,255,255,.4);background:rgba(255
     <div style="display:flex;align-items:center;gap:10px">
     <div style="display:flex;flex-direction:column;gap:2px">
       <div class="hdr-date" id="last-date-lbl">آخرین داده: ۱۴۰۵/۰۸/۰۲</div>
-      <div class="hdr-date" id="update-lbl" style="font-size:10px;opacity:.65">بروزرسانی: ۱۴۰۵/۰۸/۰۳ - ۱۱:۱۱</div>
+      <div class="hdr-date" id="update-lbl" style="font-size:10px;opacity:.65">بروزرسانی: ۱۴۰۵/۰۸/۰۳ - ۱۲:۴۹</div>
     </div>
     <button id="theme-btn" onclick="toggleTheme()" style="width:34px;height:34px;border-radius:50%;border:1.5px solid rgba(255,255,255,.3);background:rgba(255,255,255,.12);cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .3s ease" title="تغییر تم">&#127769;</button>
   </div>
@@ -606,9 +606,29 @@ function gv(p,k){return(p[k]||{}).total||0;}
 var curP='کل سال ۱۴۰۵',calYear=1405,calMonth=3,selDate=null,detTypeFilter='all',detCompanyFilter='all',detSortField='amount',detSortAsc=false,issF='all';
 var MONTHS=['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
 var DAYS=['ش','ی','د','س','چ','پ','ج'];
-var MDAYS=[31,31,31,31,31,31,30,30,30,30,30,29];
-var OFFSETS={1:0,2:3,3:6,4:2,5:5,6:1,7:4,8:0,9:3,10:5,11:1,12:3};
 var COC={'پارس آناهید':'var(--ac)','گسترش تمدن':'var(--gr)','توسعه الماس':'var(--yw)','سیمرغ':'var(--pu)','رهجو':'#64748b'};
+
+function jalaliToGregorian(jy,jm,jd){
+  jy+=1595;
+  var days=-355668+365*jy+Math.floor(jy/33)*8+Math.floor((jy%33+3)/4)+jd+(jm<7?(jm-1)*31:(jm-7)*30+186);
+  var gy=400*Math.floor(days/146097);days%=146097;
+  if(days>36524){gy+=100*Math.floor(--days/36524);days%=36524;if(days>=365)days++;}
+  gy+=4*Math.floor(days/1461);days%=1461;
+  if(days>365){gy+=Math.floor((days-1)/365);days=(days-1)%365;}
+  var gd=days+1,monthLengths=[0,31,28,31,30,31,30,31,31,30,31,30,31];
+  if((gy%4===0&&gy%100!==0)||gy%400===0)monthLengths[2]=29;
+  var gm=1;while(gm<=12&&gd>monthLengths[gm]){gd-=monthLengths[gm++];}
+  return [gy,gm,gd];
+}
+function jalaliWeekday(jy,jm,jd){
+  var g=jalaliToGregorian(jy,jm,jd);
+  return (new Date(Date.UTC(g[0],g[1]-1,g[2])).getUTCDay()+1)%7;
+}
+function jalaliMonthDays(jy,jm){
+  if(jm<=6)return 31;if(jm<=11)return 30;
+  var start=jalaliToGregorian(jy,12,1),next=jalaliToGregorian(jy+1,1,1);
+  return Math.round((Date.UTC(next[0],next[1]-1,next[2])-Date.UTC(start[0],start[1]-1,start[2]))/86400000);
+}
 
 function setPeriod(el,p){curP=p;document.querySelectorAll('.pb').forEach(function(b){b.classList.remove('active');});el.classList.add('active');render();renderCF();}
 
@@ -1374,9 +1394,9 @@ function renderCal(){
   var hdrs=document.getElementById('cal-hdrs');hdrs.innerHTML='';
   DAYS.forEach(function(d){var e=document.createElement('div');e.className='cal-hdr';e.textContent=d;hdrs.appendChild(e);});
   var grid=document.getElementById('cal-grid');grid.innerHTML='';
-  var off=OFFSETS[calMonth]||0;
+  var off=jalaliWeekday(calYear,calMonth,1);
   for(var i=0;i<off;i++){var e2=document.createElement('div');e2.style.aspectRatio='1';grid.appendChild(e2);}
-  for(var day=1;day<=MDAYS[calMonth-1];day++){
+  for(var day=1,daysInMonth=jalaliMonthDays(calYear,calMonth);day<=daysInMonth;day++){
     var key=dkey(calYear,calMonth,day);
     var items=DATA.payments[key]||[];
     var hasNP=items.some(function(x){return x.type==='اسناد پرداختنی';});
